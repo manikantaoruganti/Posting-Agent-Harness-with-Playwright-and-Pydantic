@@ -1,0 +1,11 @@
+row_id,post_date,raw_text
+post_001,2024-07-20,This is a test post for today. It's a beautiful day to learn something new!
+post_002,2024-07-20,Another post for today. This one is about the amazing features of our new product.
+post_003,2024-07-21,Tomorrow's post: The future of AI is here.
+post_004,2024-07-22,A post with a banned word: I guarantee you will love this investment.
+post_005,2024-07-23,A very long post that exceeds 280 characters to test the length guardrail. This post is intentionally designed to be excessively verbose and go beyond the typical character limits imposed by social media platforms like X (formerly Twitter). It serves as a crucial test case for ensuring that our guardrail system correctly identifies and flags content that violates length constraints, preventing it from being posted.
+post_006,2024-07-24,A post with a URL in raw text: Check out our website at https://example.com for more info.
+post_007,2024-07-25,A post with a mention in raw text: Shoutout to @StackBlitz for the amazing tools!
+post_008,2024-07-26,LLM introduces new URL: Learn more at https://new-example.com
+post_009,2024-07-27,LLM introduces new mention: Thanks to @NewUser for the feedback.
+post_010,2024-07-28,A simple post that should pass all checks.
