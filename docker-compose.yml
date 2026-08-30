@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  mock_social:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: mock_social_server
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    environment:
+      # FastAPI server environment variables
+      PORT: 8080
+    volumes:
+      - ./src:/app/src # Mount src for development/hot-reloading if needed, though not strictly required for final build
+
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: agent_service
+    depends_on:
+      mock_social:
+        condition: service_healthy
+    environment:
+      # Load all environment variables from .env file
+      # These will be picked up by python-dotenv in the agent script
+      LLM_BASE_URL: ${LLM_BASE_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      MOCK_SOCIAL_URL: ${MOCK_SOCIAL_URL}
+      MOCK_USERNAME: ${MOCK_USERNAME}
+      MOCK_PASSWORD: ${MOCK_PASSWORD}
+      HITL_ENABLED: ${HITL_ENABLED}
+    volumes:
+      - ./data:/app/data
+      - ./results:/app/results
+      - ./src:/app/src # Mount src for agent code
+    command: python src/agent.py # Default command to run the agent
+    # Optional: Add a healthcheck for the agent if it were a long-running service
+    # For this task, it's a single-run process, so a healthcheck isn't strictly applicable
+    # unless we wrap the agent in a loop or a different entrypoint.
+    # For automated evaluation, it's expected to run and exit.
