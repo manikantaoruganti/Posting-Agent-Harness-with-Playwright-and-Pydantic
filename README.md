@@ -17,6 +17,7 @@ The agent follows a deterministic control loop with several key stages:
 5.  **Playwright Execution:** A Playwright browser actor logs into the mock social server (if not already authenticated), navigates to the compose page, fills the tweet text, and posts it. Browser state is persisted.
 6.  **JSONL Observability:** Every attempted processing run appends a detailed JSON object to `data/traces.jsonl`, providing a complete, replayable record of the agent's actions and decisions.
 ## Architecture Diagram
+```mermaid
 flowchart TD
     A([Start Agent]) --> B[Load Environment Variables]
     B --> C[Read schedule.csv]
@@ -104,6 +105,7 @@ flowchart TD
     class F,L,R,W,AD decision
     class M,T,AF fallback
     class A,Z terminal
+    ```
 ## Repository Structure
 
 ```
