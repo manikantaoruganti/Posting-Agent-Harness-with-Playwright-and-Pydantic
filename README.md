@@ -17,95 +17,61 @@ The agent follows a deterministic control loop with several key stages:
 5.  **Playwright Execution:** A Playwright browser actor logs into the mock social server (if not already authenticated), navigates to the compose page, fills the tweet text, and posts it. Browser state is persisted.
 6.  **JSONL Observability:** Every attempted processing run appends a detailed JSON object to `data/traces.jsonl`, providing a complete, replayable record of the agent's actions and decisions.
 ## Architecture Diagram
+
 ```mermaid
 flowchart TD
     A([Start Agent]) --> B[Load Environment Variables]
     B --> C[Read schedule.csv]
     C --> D[Determine Current Date]
-    D --> E[Filter Due Posts and Exclude Posted IDs]
+    D --> E[Filter Due Posts]
     E --> F{Eligible Post Exists?}
 
-    F -- No --> G[Log Skipped Run]
-    G --> AG
+    F -->|No| G[Log Skipped Run]
+    G --> AG[Append Trace]
 
-    F -- Yes --> H[Select Exactly One Due Post]
+    F -->|Yes| H[Select One Due Post]
     H --> I[Extract row_id and raw_text]
-    I --> J[LLM Service: Transform Raw Text]
+    I --> J[LLM Transform Raw Text]
     J --> K[Pydantic Validation]
-
     K --> L{Schema Valid?}
-    L -- No --> M[Use raw_text Fallback]
-    L -- Yes --> N[GuardrailChain]
+
+    L -->|No| M[Use raw_text Fallback]
+    L -->|Yes| N[Run Guardrails]
 
     N --> O[Check Tweet Length]
     O --> P[Check Banned Words]
     P --> Q[Check URL and Mention Groundedness]
-    Q --> R{All Guardrails Pass?}
+    Q --> R{Guardrails Pass?}
 
-    R -- Yes --> S[Use Validated LLM Tweet]
-    R -- No --> T[Log Failure and Use raw_text Fallback]
+    R -->|Yes| S[Use Validated Tweet]
+    R -->|No| T[Log Failure and Use Fallback]
 
-    M --> U[Prepare Final Post Text]
+    M --> U[Prepare Final Post]
     S --> U
     T --> U
 
     U --> V[Playwright Browser Actor]
     V --> W{Authenticated?}
 
-    W -- No --> X[Login to Mock Social Server]
+    W -->|No| X[Login to Mock Server]
     X --> Y[Save Browser State]
     Y --> AA[Open Compose Page]
 
-    W -- Yes --> AA
+    W -->|Yes| AA
     AA --> AB[Fill Tweet Text]
     AB --> AC[Click Post Button]
     AC --> AD{Posting Successful?}
 
-    AD -- Yes --> AE[Update posted_ids.json]
-    AD -- No --> AF[Record Failed Action]
+    AD -->|Yes| AE[Update posted_ids.json]
+    AD -->|No| AF[Record Failed Action]
 
-    AE --> AG[Append Trace to traces.jsonl]
+    AE --> AG
     AF --> AG
 
     AG --> AH[Evaluate Metrics]
-    AH --> AI[Write results/metrics.json]
+    AH --> AI[Write Metrics JSON]
     AI --> Z([End])
-
-    subgraph LLM["LLM and Validation"]
-        J
-        K
-    end
-
-    subgraph Guardrails["Deterministic Guardrails"]
-        N
-        O
-        P
-        Q
-    end
-
-    subgraph MockPlatform["Local Mock Social Platform"]
-        X
-        AA
-        AB
-        AC
-    end
-
-    subgraph Observability["Observability and Evaluation"]
-        AG
-        AH
-        AI
-    end
-
-    classDef process fill:#e8f1ff,stroke:#3973ac,color:#172b4d
-    classDef decision fill:#fff1cc,stroke:#c58b16,color:#493600
-    classDef fallback fill:#ffe5e5,stroke:#c0392b,color:#78281f
-    classDef terminal fill:#dff3e4,stroke:#388e5a,color:#174d2b
-
-    class B,C,D,E,H,I,J,K,N,O,P,Q,U,V,X,Y,AA,AB,AC,AE,AG,AH,AI process
-    class F,L,R,W,AD decision
-    class M,T,AF fallback
-    class A,Z terminal
-    ```
+```
 ## Repository Structure
 
 ```
